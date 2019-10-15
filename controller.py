@@ -5,15 +5,17 @@ from async_sniff import sniff
 from cpu_metadata import CPUMetadata
 import time
 
+from mininet.log import lg, LEVELS
+
 ARP_OP_REQ   = 0x0001
 ARP_OP_REPLY = 0x0002
 
 class MacLearningController(Thread):
-    def __init__(self, sw, start_wait=0.3):
+    def __init__(self, sw, ctrl_port=1, start_wait=0.3):
         super(MacLearningController, self).__init__()
         self.sw = sw
         self.start_wait = start_wait # time to wait for the controller to be listenning
-        self.iface = sw.intfs[1].name
+        self.iface = sw.intfs[ctrl_port].name
         self.port_for_mac = {}
         self.stop_event = Event()
 
@@ -36,7 +38,8 @@ class MacLearningController(Thread):
         self.send(pkt)
 
     def handlePkt(self, pkt):
-        #pkt.show2()
+        if lg.getEffectiveLevel() <= LEVELS['debug']:
+            pkt.show2()
         assert CPUMetadata in pkt, "Should only receive packets from switch with special header"
 
         # Ignore packets that the CPU sends:
